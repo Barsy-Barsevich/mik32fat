@@ -46,3 +46,23 @@ inline MIK32FAT_Status_TypeDef MIK32FAT_FBP(MIK32FAT_Descriptor_TypeDef *fs, con
 {
     return mik32fat_find_by_path(fs, path);
 }
+
+inline MIK32FAT_Status_TypeDef MIK32FAT_FCBP(MIK32FAT_Descriptor_TypeDef *fs, const char *path, bool dir)
+{
+    return mik32fat_find_or_create_by_path(fs, path, dir);
+}
+
+inline MIK32FAT_Status_TypeDef MIK32FAT_TFC(MIK32FAT_Descriptor_TypeDef *fs, uint32_t cluster, uint32_t *new_cluster)
+{
+    return mik32fat_take_free_cluster(fs, cluster, new_cluster);
+}
+
+inline MIK32FAT_Status_TypeDef MIK32FAT_C(MIK32FAT_Descriptor_TypeDef *fs, const char *path, bool dir)
+{
+    return mik32fat_create(fs, path, dir);
+}
+
+inline MIK32FAT_Status_TypeDef MIK32FAT_D(MIK32FAT_Descriptor_TypeDef *fs, const char *path)
+{
+    return mik32fat_delete(fs, path);
+}
