@@ -99,7 +99,7 @@ MIK32FAT_Status_TypeDef mik32fat_diag_sector_list
     printf("\nList:\n");
     MIK32FAT_Status_TypeDef res = MIK32FAT_STATUS_OK;
     uint8_t sector_counter = 0;
-    uint32_t sector = f->data_region_begin + (f->temp.cluster * f->param.sec_per_clust);
+    uint32_t sector = f->data_region_begin + (f->temp.cluster * f->param.sectors_per_cluster);
     
     do {
         int sd_res = (int)mik32_sd_single_read(f->card, sector, f->buffer);
@@ -160,7 +160,7 @@ MIK32FAT_Status_TypeDef mik32fat_diag_sector_list
         if (entire_counter <= 512) break;
         sector_counter += 1;
         sector += 1;
-    } while (sector_counter < f->param.sec_per_clust);
+    } while (sector_counter < f->param.sectors_per_cluster);
 
     if (res != MIK32FAT_STATUS_OK) return res;
     return res;
@@ -175,10 +175,10 @@ void mik32fat_diag_fat_info(MIK32FAT_Descriptor_TypeDef *fs)
     printf("* Data region begin -- %u\n", (unsigned)fs->data_region_begin);
     printf("* Prev read sector --- %u\n", (unsigned)fs->prev_sector);
     printf("FS parameters:\n");
-    printf("* Sec per clust ------ %u\n", (unsigned)fs->param.sec_per_clust);
+    printf("* Sec per clust ------ %u\n", (unsigned)fs->param.sectors_per_cluster);
     printf("* Num of FATs -------- %u\n", (unsigned)fs->param.num_of_fats);
     printf("* FAT length, sec ---- %u\n", (unsigned)fs->param.fat_length);
-    printf("* Clust length ------- %u\n", (unsigned)fs->param.clust_len_bytes);
+    printf("* Clust length ------- %u\n", (unsigned)fs->param.cluster_len_bytes);
     printf("Temporary object parameters:\n");
     printf("* 1st file/dir cluster ------------------- %u\n", (unsigned)fs->temp.cluster);
     printf("* 1st clust of dir contains temp obj------ %u\n", (unsigned)fs->temp.dir_cluster);

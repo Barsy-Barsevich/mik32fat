@@ -2,7 +2,7 @@
 
 uint32_t __mik32fat_get_sector(MIK32FAT_Descriptor_TypeDef *fs, uint32_t cluster, uint32_t sector_offset)
 {
-    return fs->data_region_begin + cluster * fs->param.sec_per_clust + sector_offset;
+    return fs->data_region_begin + cluster * fs->param.sectors_per_cluster + sector_offset;
 }
 
 int mik32fat_name_read_from_entire(const MIK32FAT_Entire_TypeDef *entire, char *dst_name)
@@ -34,7 +34,8 @@ MIK32FAT_Status_TypeDef mik32fat_init(MIK32FAT_Descriptor_TypeDef* fs, MIK32SD_D
         return MIK32FAT_STATUS_INCORRECT_ARGUMENT;
     }
 
-    fs->sector_len_bytes = 512;
+    fs->param.sector_len_bytes = 512;
+    fs->param.links_per_sector = fs->param.sector_len_bytes / sizeof(uint32_t);
     fs->card = disk;
     /* Read Master boot record */
     __DISK_ERROR_CHECK( mik32fat_wheels_single_read(fs->card, 0, fs->buffer) );
@@ -70,7 +71,7 @@ MIK32FAT_Status_TypeDef mik32fat_init(MIK32FAT_Descriptor_TypeDef* fs, MIK32SD_D
     __DISK_ERROR_CHECK( mik32fat_wheels_single_read(fs->card, fs->fs_begin, fs->buffer) );
     fs->prev_sector = fs->fs_begin;
 
-    fs->param.sec_per_clust = fs->buffer[MIK32FAT_BPB_SECTORS_PER_CLUSTER_OFFSET];
+    fs->param.sectors_per_cluster = fs->buffer[MIK32FAT_BPB_SECTORS_PER_CLUSTER_OFFSET];
     /* Read number of sectors of reserved file system's region */
     uint16_t num_of_res_sec = (uint16_t)(fs->buffer[MIK32FAT_BPB_RES_SECTORS_COUNT_OFFSET+1]<<8) |
         fs->buffer[MIK32FAT_BPB_RES_SECTORS_COUNT_OFFSET];
@@ -85,7 +86,7 @@ MIK32FAT_Status_TypeDef mik32fat_init(MIK32FAT_Descriptor_TypeDef* fs, MIK32SD_D
     {
         fs->fat2_begin = fs->fat1_begin + fs->param.fat_length;
     }
-    fs->param.clust_len_bytes = fs->sector_len_bytes * fs->param.sec_per_clust;
+    fs->param.cluster_len_bytes = fs->param.sector_len_bytes * fs->param.sectors_per_cluster;
     /* Calculate a start address of file system's data region */
     fs->data_region_begin = fs->fat1_begin + fs->param.num_of_fats * fs->param.fat_length;
     return MIK32FAT_STATUS_OK;
@@ -125,8 +126,8 @@ MIK32FAT_Status_TypeDef mik32fat_find_next_cluster(MIK32FAT_Descriptor_TypeDef* 
         return MIK32FAT_STATUS_INCORRECT_ARGUMENT;
     }
     
-    uint32_t fat_sector = (fs->temp.cluster + 2) / (fs->sector_len_bytes/sizeof(uint32_t));
-    uint32_t link_idx = (fs->temp.cluster + 2) % (fs->sector_len_bytes/sizeof(uint32_t));
+    uint32_t fat_sector = (fs->temp.cluster + 2) / fs->param.links_per_sector;
+    uint32_t link_idx = (fs->temp.cluster + 2) % fs->param.links_per_sector;
     // printf("Link idx: %u\n", (unsigned)link_idx);
     uint32_t* link_in_sector = (uint32_t*)fs->buffer;
     
@@ -265,10 +266,10 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_name(MIK32FAT_Descriptor_TypeDef *fs, c
     while (res == MIK32FAT_STATUS_OK)
     {
         uint32_t sector;
-        for (uint8_t sec=0; sec < fs->param.sec_per_clust; sec++)
+        for (uint8_t sec=0; sec < fs->param.sectors_per_cluster; sec++)
         {
             /* Read sector data */
-            // sector = fs->data_region_begin + fs->temp.cluster * fs->param.sec_per_clust + sec;
+            // sector = fs->data_region_begin + fs->temp.cluster * fs->param.sectors_per_cluster + sec;
             sector = __mik32fat_get_sector(fs, fs->temp.cluster, sec);
             res = __mik32fat_sector_sread(fs, sector);
             if (res != MIK32FAT_STATUS_OK)
@@ -278,11 +279,11 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_name(MIK32FAT_Descriptor_TypeDef *fs, c
             }
             /* Try to find the name in sector */
             uint16_t entire = 0;
-            while (entire < fs->sector_len_bytes && memcmp(name_str, fs->buffer+entire, 11) != 0)
+            while (entire < fs->param.sector_len_bytes && memcmp(name_str, fs->buffer+entire, 11) != 0)
             {
                 entire += MIK32FAT_ENTIRE_SIZE_BYTES;
             }
-            if (entire >= fs->sector_len_bytes) continue;
+            if (entire >= fs->param.sector_len_bytes) continue;
             /* The correct name has been found */
             /* Save parameters */
             fs->temp.entire_in_dir_clust = entire;
@@ -491,16 +492,15 @@ MIK32FAT_Status_TypeDef mik32fat_take_free_cluster
     uint32_t fat_sector = 0;
     uint32_t _newclus = 0;
     uint32_t *link = (uint32_t*)fs->buffer;
-    uint32_t links_per_sec = fs->sector_len_bytes / sizeof(uint32_t);
     while (fat_sector < fs->param.fat_length && _newclus == 0)
     {
         __DISK_ERROR_CHECK( __mik32fat_sector_sread(fs, fs->fat1_begin + fat_sector) );
-        for (size_t i=0; i<links_per_sec; i++)
+        for (size_t i=0; i<fs->param.links_per_sector; i++)
         {
             if (fat_sector == 0 && i < 2) continue;
             if (link[i] == 0)
             {
-                _newclus = fat_sector * links_per_sec + i;
+                _newclus = fat_sector * fs->param.links_per_sector + i;
                 link[i] = 0x0FFFFFFF;
                 __DISK_ERROR_CHECK( __mik32fat_sector_swrite(fs, fs->fat1_begin + fat_sector) );
                 __DISK_ERROR_CHECK( __mik32fat_sector_swrite(fs, fs->fat2_begin + fat_sector) );
@@ -517,21 +517,21 @@ MIK32FAT_Status_TypeDef mik32fat_take_free_cluster
     *new_cluster = _newclus;
 
     /* Find sector of FAT containing previous cluster link */
-    uint32_t prev_link_fat1_sector = fs->fat1_begin + ((cluster+2) / (fs->sector_len_bytes / sizeof(uint32_t)));
-    uint32_t prev_link_fat2_sector = fs->fat2_begin + ((cluster+2) / (fs->sector_len_bytes / sizeof(uint32_t)));
+    uint32_t prev_link_fat1_sector = fs->fat1_begin + ((cluster+2) / fs->param.links_per_sector);
+    uint32_t prev_link_fat2_sector = fs->fat2_begin + ((cluster+2) / fs->param.links_per_sector);
     __DISK_ERROR_CHECK( __mik32fat_sector_sread(fs, prev_link_fat1_sector) );
     // uint32_t *link = (uint32_t*)fs->buffer;
-    uint32_t prev_clus_link_idx = (cluster+2) % (fs->sector_len_bytes/sizeof(uint32_t));
+    uint32_t prev_clus_link_idx = (cluster+2) % fs->param.links_per_sector;
     link[prev_clus_link_idx] = _newclus+2;
     __DISK_ERROR_CHECK( __mik32fat_sector_serase(fs, prev_link_fat1_sector) );
     __DISK_ERROR_CHECK( __mik32fat_sector_swrite(fs, prev_link_fat1_sector) );
     __DISK_ERROR_CHECK( __mik32fat_sector_serase(fs, prev_link_fat2_sector) );
     __DISK_ERROR_CHECK( __mik32fat_sector_swrite(fs, prev_link_fat2_sector) );
     /* Find sector of FAT containing previous cluster link */
-    uint32_t this_link_fat1_sector = fs->fat1_begin + ((cluster+2) / (fs->sector_len_bytes / sizeof(uint32_t)));
-    uint32_t this_link_fat2_sector = fs->fat2_begin + ((cluster+2) / (fs->sector_len_bytes / sizeof(uint32_t)));
+    uint32_t this_link_fat1_sector = fs->fat1_begin + ((cluster+2) / (fs->param.sector_len_bytes / sizeof(uint32_t)));
+    uint32_t this_link_fat2_sector = fs->fat2_begin + ((cluster+2) / (fs->param.sector_len_bytes / sizeof(uint32_t)));
     __DISK_ERROR_CHECK( __mik32fat_sector_sread(fs, this_link_fat1_sector) );
-    uint32_t this_clus_link_idx = (_newclus+2) % (fs->sector_len_bytes/sizeof(uint32_t));
+    uint32_t this_clus_link_idx = (_newclus+2) % fs->param.links_per_sector;
     link[this_clus_link_idx] = 0x0FFFFFFF;
     //xprintf("Write link 0x0FFFFFFF on field %04X\n", new_clus);
     __DISK_ERROR_CHECK( __mik32fat_sector_serase(fs, this_link_fat1_sector) );
@@ -613,7 +613,7 @@ MIK32FAT_Status_TypeDef mik32fat_create
     size_t fat_sector = 0;
     uint32_t new_cluster = 0;
     uint32_t *link = (uint32_t*)fs->buffer;
-    uint32_t links_per_sec = fs->sector_len_bytes / sizeof(uint32_t);
+    uint32_t links_per_sec = fs->param.sector_len_bytes / sizeof(uint32_t);
     while (fat_sector < fs->param.fat_length && new_cluster == 0)
     {
         __DISK_ERROR_CHECK( __mik32fat_sector_sread(fs, fs->fat1_begin + fat_sector) );
@@ -639,10 +639,10 @@ MIK32FAT_Status_TypeDef mik32fat_create
     /* Set /. and /.. entires in new cluster if directory (look MS FAT Specification) */
     if (dir == true)
     {
-        memset(fs->buffer, 0x00, fs->sector_len_bytes);
+        memset(fs->buffer, 0x00, fs->param.sector_len_bytes);
         // Clear all the sectors of new dir cluster
-        uint32_t sector = fs->data_region_begin+(new_cluster-2)*fs->param.sec_per_clust;
-        for (int i=1; i<fs->param.sec_per_clust; i++)
+        uint32_t sector = fs->data_region_begin+(new_cluster-2)*fs->param.sectors_per_cluster;
+        for (int i=1; i<fs->param.sectors_per_cluster; i++)
         {
             __DISK_ERROR_CHECK( __mik32fat_sector_serase(fs, sector+i) );
             __DISK_ERROR_CHECK( __mik32fat_sector_swrite(fs, sector+i) );
@@ -670,24 +670,24 @@ MIK32FAT_Status_TypeDef mik32fat_create
     MIK32FAT_TempData_TypeDef temp = fs->temp;
     while (res == MIK32FAT_STATUS_OK)
     {
-        sector = fs->data_region_begin + fs->temp.cluster * fs->param.sec_per_clust;
-        for (uint8_t idx=0; idx < fs->param.sec_per_clust; idx++)
+        sector = fs->data_region_begin + fs->temp.cluster * fs->param.sectors_per_cluster;
+        for (uint8_t idx=0; idx < fs->param.sectors_per_cluster; idx++)
         {
             __SAVING_TEMP_ERROR_CHECK( __mik32fat_sector_sread(fs, sector) );
             sector += 1;
             entire = 0;
-            while (entire < fs->sector_len_bytes)
+            while (entire < fs->param.sector_len_bytes)
             {
                 if ((fs->buffer[entire] == 0x00) || (fs->buffer[entire] == 0xE5)) break;
                 entire += 32;
             }
-            if (entire < fs->sector_len_bytes)
+            if (entire < fs->param.sector_len_bytes)
             {
                 sector -= 1;
                 break;
             }
         }
-        if (entire < fs->sector_len_bytes) break;
+        if (entire < fs->param.sector_len_bytes) break;
         res = mik32fat_find_next_cluster(fs);
     }
     /* FAT_FNC error. if next cluster not found, take a free cluster */
@@ -696,7 +696,7 @@ MIK32FAT_Status_TypeDef mik32fat_create
         uint32_t value;
         __SAVING_TEMP_ERROR_CHECK( mik32fat_take_free_cluster(fs, fs->temp.cluster, &value));
         entire = 0;
-        sector = fs->data_region_begin + value * fs->param.sec_per_clust;
+        sector = fs->data_region_begin + value * fs->param.sectors_per_cluster;
         //__DISK_ERROR_CHECK( mik32fat_wheels_single_read(fs->card, sector, fs->buffer) );
     }
     else if (res != MIK32FAT_STATUS_OK) return res;
@@ -737,7 +737,7 @@ MIK32FAT_Status_TypeDef mik32fat_delete_temp_object(MIK32FAT_Descriptor_TypeDef*
     uint32_t prev_fat_sector = 0;
     while ((cluster & 0x0FFFFFFF) < 0x0FFFFFF7)
     {
-        uint32_t fat_sector = cluster / (fs->sector_len_bytes/sizeof(uint32_t));
+        uint32_t fat_sector = cluster / fs->param.links_per_sector;
         /* write FAT sector only if new FAT sector is other */
         if (!first)
         {
@@ -750,7 +750,7 @@ MIK32FAT_Status_TypeDef mik32fat_delete_temp_object(MIK32FAT_Descriptor_TypeDef*
             }
         }
 
-        uint32_t link_position = cluster % (fs->sector_len_bytes/sizeof(uint32_t));
+        uint32_t link_position = cluster % fs->param.links_per_sector;
         uint32_t *link = (uint32_t*)fs->buffer;
         __DISK_ERROR_CHECK( __mik32fat_sector_sread(fs, fs->fat1_begin + fat_sector) );
         cluster = link[link_position];

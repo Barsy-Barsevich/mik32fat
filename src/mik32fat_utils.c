@@ -7,13 +7,13 @@
 MIK32FAT_Status_TypeDef mik32fat_utils_ls(MIK32FAT_Descriptor_TypeDef *fs, FILE *output)
 {
     MIK32FAT_TempData_TypeDef temp = fs->temp;
-    uint32_t entires_per_sector = fs->sector_len_bytes / sizeof(MIK32FAT_Entire_TypeDef);
+    uint32_t entires_per_sector = fs->param.sector_len_bytes / sizeof(MIK32FAT_Entire_TypeDef);
     char name[20];
     MIK32FAT_Status_TypeDef res = MIK32FAT_STATUS_OK;
     while (res == MIK32FAT_STATUS_OK)
     {   
-        uint32_t sector = fs->data_region_begin + fs->temp.cluster * fs->param.sec_per_clust;
-        for (int i=0; i < fs->param.sec_per_clust; i++)
+        uint32_t sector = fs->data_region_begin + fs->temp.cluster * fs->param.sectors_per_cluster;
+        for (int i=0; i < fs->param.sectors_per_cluster; i++)
         {
             res = __mik32fat_sector_sread(fs, sector+i);
             if (res != MIK32FAT_STATUS_OK)

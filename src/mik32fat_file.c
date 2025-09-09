@@ -23,7 +23,7 @@
 //             __MIK32FAT_ERROR_CHECK( mik32fat_find_by_path(fs, path) );
 //             /* Access settings */
 //             file->cluster = fs->temp.cluster;
-//             file->dir_sector = fs->temp.dir_cluster * fs->param.sec_per_clust + fs->temp.dir_sec_offset;
+//             file->dir_sector = fs->temp.dir_cluster * fs->param.sectors_per_cluster + fs->temp.dir_sec_offset;
 //             file->entire_in_dir_clust = fs->temp.entire_in_dir_clust;
 //             file->status = fs->temp.status;
 //             file->addr = 0;
@@ -34,7 +34,7 @@
 //             res = mik32fat_find_or_create_by_path(fs, path);
 //             if (res != MIK32FAT_STATUS_OK) return res;
 //             /* Access settings */
-//             file->dir_sector = fs->temp.dir_cluster * fs->param.sec_per_clust + fs->temp.dir_sec_offset;
+//             file->dir_sector = fs->temp.dir_cluster * fs->param.sectors_per_cluster + fs->temp.dir_sec_offset;
 //             file->entire_in_dir_clust = fs->temp.entire_in_dir_clust;
 //             file->status = fs->temp.status;
 //             file->addr = fs->temp.len;
@@ -56,7 +56,7 @@
 //             if (res != MIK32FAT_STATUS_OK) return res;
 //             /* Access settings */
 //             file->cluster = fs->temp.cluster;
-//             file->dir_sector = fs->temp.dir_cluster * fs->param.sec_per_clust + fs->temp.dir_sec_offset;
+//             file->dir_sector = fs->temp.dir_cluster * fs->param.sectors_per_cluster + fs->temp.dir_sec_offset;
 //             file->entire_in_dir_clust = fs->temp.entire_in_dir_clust;
 //             file->status = fs->temp.status;
 //             file->addr = 0;
@@ -89,8 +89,8 @@
 //         if (file->writing_not_finished == true)
 //         {
 //             file->writing_not_finished = false;
-//             uint32_t clust_len = 512 * file->fs->param.sec_per_clust;
-//             sector = file->fs->data_region_begin + file->cluster * file->fs->param.sec_per_clust + (file->addr % clust_len) / 512;
+//             uint32_t clust_len = 512 * file->fs->param.sectors_per_cluster;
+//             sector = file->fs->data_region_begin + file->cluster * file->fs->param.sectors_per_cluster + (file->addr % clust_len) / 512;
 //             //xprintf("Write sector: %u", sector);
 //             __DISK_ERROR_CHECK( mik32fat_wheels_single_erase(file->fs->card, sector) );
 //             __DISK_ERROR_CHECK( mik32fat_wheels_single_write(file->fs->card, sector, file->fs->buffer) );
@@ -148,7 +148,7 @@
 //         }
 //         file->cluster = fs->temp.cluster;
 //         /* Read sector data */
-//         uint32_t sector = fs->data_region_begin + file->cluster * fs->param.sec_per_clust +
+//         uint32_t sector = fs->data_region_begin + file->cluster * fs->param.sectors_per_cluster +
 //             ((file->addr - start_addr) / 512);
 //         /* Read sector only if has not already buffered */
 //         if (fs->prev_sector != sector)
@@ -188,7 +188,7 @@
 //     uint32_t buf_idx = file->addr % 512;
 //     /* Number of written bytes */
 //     uint32_t counter = 0;
-//     //uint32_t clust_len = 512 * file->fs->param.sec_per_clust;
+//     //uint32_t clust_len = 512 * file->fs->param.sectors_per_cluster;
 
 //     MIK32FAT_Descriptor_TypeDef *fs = file->fs;
 
@@ -197,7 +197,7 @@
 //         /* if writing is not started with 0 fs buffer address, read sector data to not lost previously written data */
 //         if ((buf_idx != 0) && (file->writing_not_finished == false))
 //         {
-//             uint32_t sector = file->fs->data_region_begin + file->cluster * file->fs->param.sec_per_clust + (file->addr % file->fs->param.clust_len_bytes) / 512;
+//             uint32_t sector = file->fs->data_region_begin + file->cluster * file->fs->param.sectors_per_cluster + (file->addr % file->fs->param.clust_len_bytes) / 512;
 //             if (mik32fat_wheels_single_read(file->fs->card, sector, file->fs->buffer) != 0) return counter;
 //             file->fs->prev_sector = sector;
 //         }
@@ -225,7 +225,7 @@
 //         if (buf_idx >= 512)
 //         {
 //             file->writing_not_finished = false;
-//             uint32_t sector = file->fs->data_region_begin + file->cluster * file->fs->param.sec_per_clust + ((file->addr-1) % file->fs->param.clust_len_bytes) / 512;
+//             uint32_t sector = file->fs->data_region_begin + file->cluster * file->fs->param.sectors_per_cluster + ((file->addr-1) % file->fs->param.clust_len_bytes) / 512;
 //             MIK32FAT_Status_TypeDef res;
 //             res = __mik32fat_sector_serase(fs, sector);
 //             if (res != MIK32FAT_STATUS_OK)
@@ -284,7 +284,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->w.temp_sector_in_cluster = 0;
         file->written_bytes = 0;
         file->calculated_sector_to_write = fs->data_region_begin + file->w.temp_cluster *
-             fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+             fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     }
     else if (strcmp(mod, "w") == 0)
     {
@@ -297,7 +297,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->w.temp_sector_in_cluster = 0;
         file->written_bytes = 0;
         file->calculated_sector_to_write = fs->data_region_begin + file->w.temp_cluster *
-             fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+             fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     }
     else if (strcmp(mod, "w+") == 0)
     {
@@ -314,7 +314,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->data_to_read = 0;
         file->written_bytes = 0;
         file->calculated_sector_to_write = fs->data_region_begin + file->w.temp_cluster *
-             fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+             fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     }
     else if (strcmp(mod, "a") == 0)
     {
@@ -322,10 +322,10 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->r.enable = false;
         file->w.enable = true;
         uint32_t len = fs->temp.len;
-        uint32_t clusters_num = len / fs->param.clust_len_bytes;
-        uint32_t addr_in_cluster = len % fs->param.clust_len_bytes;
-        file->w.temp_sector_in_cluster = addr_in_cluster / fs->sector_len_bytes;
-        file->w.idx = addr_in_cluster % fs->sector_len_bytes;
+        uint32_t clusters_num = len / fs->param.cluster_len_bytes;
+        uint32_t addr_in_cluster = len % fs->param.cluster_len_bytes;
+        file->w.temp_sector_in_cluster = addr_in_cluster / fs->param.sector_len_bytes;
+        file->w.idx = addr_in_cluster % fs->param.sector_len_bytes;
         MIK32FAT_Status_TypeDef res = MIK32FAT_STATUS_OK;
 
         printf("Clusters num: %u\n", (unsigned)clusters_num);
@@ -349,7 +349,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->w.temp_cluster = fs->temp.cluster;
         file->written_bytes = len;
         file->calculated_sector_to_write = fs->data_region_begin + file->w.temp_cluster *
-             fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+             fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     }
     else if (strcmp(mod, "a+") == 0)
     {
@@ -357,12 +357,12 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->r.enable = true;
         file->w.enable = true;
         uint32_t len = fs->temp.len;
-        uint32_t clusters_num = len / fs->param.clust_len_bytes;
-        uint32_t addr_in_cluster = len % fs->param.clust_len_bytes;
-        file->r.temp_sector_in_cluster = addr_in_cluster / fs->sector_len_bytes;
-        file->w.temp_sector_in_cluster = addr_in_cluster / fs->sector_len_bytes;
-        file->r.idx = addr_in_cluster % fs->sector_len_bytes;
-        file->w.idx = addr_in_cluster % fs->sector_len_bytes;
+        uint32_t clusters_num = len / fs->param.cluster_len_bytes;
+        uint32_t addr_in_cluster = len % fs->param.cluster_len_bytes;
+        file->r.temp_sector_in_cluster = addr_in_cluster / fs->param.sector_len_bytes;
+        file->w.temp_sector_in_cluster = addr_in_cluster / fs->param.sector_len_bytes;
+        file->r.idx = addr_in_cluster % fs->param.sector_len_bytes;
+        file->w.idx = addr_in_cluster % fs->param.sector_len_bytes;
         MIK32FAT_Status_TypeDef res = MIK32FAT_STATUS_OK;
         while (res == MIK32FAT_STATUS_OK && clusters_num-- > 0)
         {
@@ -385,7 +385,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_open
         file->data_to_read = fs->temp.len;
         file->written_bytes = len;
         file->calculated_sector_to_write = fs->data_region_begin + file->w.temp_cluster *
-             fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+             fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     }
     else
     {
@@ -434,7 +434,7 @@ int mik32fat_file_read_byte
     MIK32FAT_Descriptor_TypeDef *fs = file->fs;
 
     uint32_t sector = fs->data_region_begin + file->r.temp_cluster *
-        fs->param.sec_per_clust + file->r.temp_sector_in_cluster;
+        fs->param.sectors_per_cluster + file->r.temp_sector_in_cluster;
     MIK32FAT_Status_TypeDef res = __mik32fat_sector_sread(fs, sector);
     if (res != MIK32FAT_STATUS_OK)
     {
@@ -449,10 +449,10 @@ int mik32fat_file_read_byte
         return 0;
     }
 
-    if (file->r.idx == fs->sector_len_bytes-1)
+    if (file->r.idx == fs->param.sector_len_bytes-1)
     {
         file->r.idx = 0;
-        if (file->r.temp_sector_in_cluster == fs->param.sec_per_clust-1)
+        if (file->r.temp_sector_in_cluster == fs->param.sectors_per_cluster-1)
         {
             file->r.temp_sector_in_cluster = 0;
             MIK32FAT_TempData_TypeDef temp = fs->temp;
@@ -522,7 +522,7 @@ int mik32fat_file_read
     while (len > 0 && file->data_to_read > 0)
     {
         uint32_t sector = fs->data_region_begin + file->r.temp_cluster *
-            fs->param.sec_per_clust + file->r.temp_sector_in_cluster;
+            fs->param.sectors_per_cluster + file->r.temp_sector_in_cluster;
         MIK32FAT_Status_TypeDef res = __mik32fat_sector_sread(fs, sector);
         if (res != MIK32FAT_STATUS_OK)
         {
@@ -538,11 +538,11 @@ int mik32fat_file_read
         {
             break;
         }
-        if (file->r.idx >= fs->sector_len_bytes)
+        if (file->r.idx >= fs->param.sector_len_bytes)
         {
             file->r.idx = 0;
             file->r.temp_sector_in_cluster += 1;
-            if (file->r.temp_sector_in_cluster >= fs->param.sec_per_clust)
+            if (file->r.temp_sector_in_cluster >= fs->param.sectors_per_cluster)
             {
                 file->r.temp_sector_in_cluster = 0;
                 MIK32FAT_TempData_TypeDef temp = fs->temp;
@@ -599,11 +599,11 @@ int mik32fat_file_write_byte
     {
         /* Increment index */
         file->w.idx += 1;
-        if (file->w.idx >= fs->sector_len_bytes)
+        if (file->w.idx >= fs->param.sector_len_bytes)
         {
             file->w.idx = 0;
             file->w.temp_sector_in_cluster += 1;
-            if (file->w.temp_sector_in_cluster >= fs->param.sec_per_clust)
+            if (file->w.temp_sector_in_cluster >= fs->param.sectors_per_cluster)
             {
                 file->w.temp_sector_in_cluster = 0;
                 MIK32FAT_TempData_TypeDef temp = fs->temp;
@@ -630,7 +630,7 @@ int mik32fat_file_write_byte
     }
 
     uint32_t sector = fs->data_region_begin + file->w.temp_cluster *
-        fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+        fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
     MIK32FAT_Status_TypeDef res;
     res = __mik32fat_sector_sread(fs, sector);
     if (res != MIK32FAT_STATUS_OK)
@@ -675,7 +675,7 @@ int mik32fat_file_write
         if (file->w.idx == 0)
         {
             sector = fs->data_region_begin + file->w.temp_cluster *
-                fs->param.sec_per_clust + file->w.temp_sector_in_cluster;
+                fs->param.sectors_per_cluster + file->w.temp_sector_in_cluster;
             file->calculated_sector_to_write = sector;
         }
         /* Read sector if buffer contains other sector data */
@@ -692,7 +692,7 @@ int mik32fat_file_write
         len -= 1;
         file->written_bytes += 1;
         file->writing_not_finished = true;
-        if (file->w.idx >= fs->sector_len_bytes)
+        if (file->w.idx >= fs->param.sector_len_bytes)
         {
             file->w.idx = 0;
             /* Send buffer contents to the disk */
@@ -712,7 +712,7 @@ int mik32fat_file_write
             file->writing_not_finished = false;
             /* Next sector */
             file->w.temp_sector_in_cluster += 1;
-            if (file->w.temp_sector_in_cluster >= fs->param.sec_per_clust)
+            if (file->w.temp_sector_in_cluster >= fs->param.sectors_per_cluster)
             {
                 file->w.temp_sector_in_cluster = 0;
                 uint32_t new_cluster = 0;
@@ -769,7 +769,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_close
     }
     /* Save filelength */
     uint32_t dir_sector = fs->data_region_begin + file->param.dir_cluster *
-        fs->param.sec_per_clust + file->param.dir_sec_offset;
+        fs->param.sectors_per_cluster + file->param.dir_sec_offset;
     MIK32FAT_Status_TypeDef res = __mik32fat_sector_sread(fs, dir_sector);
     if (res != MIK32FAT_STATUS_OK)
     {
@@ -859,7 +859,7 @@ MIK32FAT_Status_TypeDef mik32fat_file_close
 //         }
 //         file->cluster = fs->temp.cluster;
 //         /* Read sector data */
-//         uint32_t sector = fs->data_region_begin + file->cluster * fs->param.sec_per_clust +
+//         uint32_t sector = fs->data_region_begin + file->cluster * fs->param.sectors_per_cluster +
 //             ((file->addr - start_addr) / 512);
 //         /* Read sector only if has not already buffered */
 //         if (fs->prev_sector != sector)

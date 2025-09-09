@@ -52,7 +52,6 @@ typedef struct
     /* SD card descriptor */
     MIK32SD_Descriptor_TypeDef *card;
     uint8_t buffer[MIK32FAT_BUFFER_LENGTH_BYTES];    //<  One-sector buffer
-    uint32_t sector_len_bytes;
     /**
      * The file system startaddr
      * It is a pointer to 0th cluster of file system containing information about
@@ -66,10 +65,12 @@ typedef struct
     // File system parameters
     struct
     {
-        uint8_t sec_per_clust;  //< Number of sectors per cluster
-        uint8_t num_of_fats;    //< Number of FATs
-        uint32_t fat_length;    //< Length of one FAT
-        uint32_t clust_len_bytes;     //< Length of 1 cluster
+        uint8_t sectors_per_cluster;      //< Number of sectors per cluster
+        uint8_t num_of_fats;        //< Number of FATs
+        uint32_t fat_length;        //< Length of one FAT
+        uint32_t cluster_len_bytes;   //< Cluster length in bytes
+        uint32_t sector_len_bytes;  //< Sector length in bytes
+        uint32_t links_per_sector;     //< Links to the cluster (4 byte) in sector
     } param;
 
     // Temporary object parameters
