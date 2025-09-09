@@ -32,7 +32,7 @@ void mik32fat_command_cdroot(MIK32FAT_Descriptor_TypeDef *fs)
     mik32fat_decode_status(mik32fat_set_pointer_to_root(fs));
 }
 
-void mik32fat_command_cd(MIK32FAT_Descriptor_TypeDef *fs, const char path)
+void mik32fat_command_cd(MIK32FAT_Descriptor_TypeDef *fs, const char *path)
 {
     mik32fat_decode_status(mik32fat_find_by_path(fs, path));
 }
