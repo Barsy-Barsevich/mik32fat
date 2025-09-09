@@ -7,7 +7,7 @@
 #include "mik32fat_types.h"
 #include "mik32fat_param.h"
 #include "mik32fat_wheels.h"
-#include "mik32fat.h"
+#include "mik32fat_base.h"
 
 // MIK32FAT_Status_TypeDef mik32fat_file_open(MIK32FAT_File_TypeDef* file, MIK32FAT_Descriptor_TypeDef* fs, const char* name, const char modificator);
 // MIK32FAT_Status_TypeDef mik32fat_file_close(MIK32FAT_File_TypeDef* file);
