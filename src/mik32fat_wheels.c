@@ -50,7 +50,11 @@ int mik32fat_wheels_single_erase
 }
 
 
-MIK32FAT_Status_TypeDef __mik32fat_sector_sread(MIK32FAT_Descriptor_TypeDef *fs, uint32_t sector)
+MIK32FAT_Status_TypeDef __mik32fat_sector_sread
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    uint32_t sector
+)
 {
     /* Read sector only if has not already been buffered */
     if (sector != fs->prev_sector)
@@ -61,12 +65,20 @@ MIK32FAT_Status_TypeDef __mik32fat_sector_sread(MIK32FAT_Descriptor_TypeDef *fs,
     return MIK32FAT_STATUS_OK;
 }
 
-MIK32FAT_Status_TypeDef __mik32fat_sector_swrite(MIK32FAT_Descriptor_TypeDef *fs, uint32_t sector)
+MIK32FAT_Status_TypeDef __mik32fat_sector_swrite
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    uint32_t sector
+)
 {
     return mik32fat_wheels_single_write(fs->card, sector, fs->buffer);
 }
 
-MIK32FAT_Status_TypeDef __mik32fat_sector_serase(MIK32FAT_Descriptor_TypeDef *fs, uint32_t sector)
+MIK32FAT_Status_TypeDef __mik32fat_sector_serase
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    uint32_t sector
+)
 {
     return mik32fat_wheels_single_erase(fs->card, sector);
 }

@@ -4,7 +4,11 @@
 /* !
  * @brief 
  */
-MIK32FAT_Status_TypeDef mik32fat_utils_ls(MIK32FAT_Descriptor_TypeDef *fs, FILE *output)
+MIK32FAT_Status_TypeDef mik32fat_utils_ls
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    FILE *output
+)
 {
     MIK32FAT_TempData_TypeDef temp = fs->temp;
     uint32_t entires_per_sector = fs->param.sector_len_bytes / sizeof(MIK32FAT_Entire_TypeDef);

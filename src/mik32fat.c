@@ -1,11 +1,20 @@
 #include "mik32fat.h"
 
-uint32_t __mik32fat_get_sector(MIK32FAT_Descriptor_TypeDef *fs, uint32_t cluster, uint32_t sector_offset)
+uint32_t __mik32fat_get_sector
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    uint32_t cluster,
+    uint32_t sector_offset
+)
 {
     return fs->data_region_begin + cluster * fs->param.sectors_per_cluster + sector_offset;
 }
 
-int mik32fat_name_read_from_entire(const MIK32FAT_Entire_TypeDef *entire, char *dst_name)
+int mik32fat_name_read_from_entire
+(
+    const MIK32FAT_Entire_TypeDef *entire,
+    char *dst_name
+)
 {
     int i = 0;
     int j = 0;
@@ -27,7 +36,11 @@ int mik32fat_name_read_from_entire(const MIK32FAT_Entire_TypeDef *entire, char *
 }
 
 
-MIK32FAT_Status_TypeDef mik32fat_init(MIK32FAT_Descriptor_TypeDef* fs, MIK32SD_Descriptor_TypeDef* disk)
+MIK32FAT_Status_TypeDef mik32fat_init
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    MIK32SD_Descriptor_TypeDef *disk
+)
 {
     if (fs == NULL || disk == NULL)
     {
@@ -98,7 +111,10 @@ MIK32FAT_Status_TypeDef mik32fat_init(MIK32FAT_Descriptor_TypeDef* fs, MIK32SD_D
  * @param fs file system's descriptor-structure
  * @return none
  */
-MIK32FAT_Status_TypeDef mik32fat_set_pointer_to_root(MIK32FAT_Descriptor_TypeDef* fs)
+MIK32FAT_Status_TypeDef mik32fat_set_pointer_to_root
+(
+    MIK32FAT_Descriptor_TypeDef *fs
+)
 {
     if (fs == NULL)
     {
@@ -119,7 +135,10 @@ MIK32FAT_Status_TypeDef mik32fat_set_pointer_to_root(MIK32FAT_Descriptor_TypeDef
  * - MIK32FAT_STATUS_DISK_ERROR - the driver error occured, [fs.temp.cluster] not changed
  * - MIK32FAT_STATUS_NOT_FOUND - there are not any next clusters, [fs.temp.cluster] not changed
  */
-MIK32FAT_Status_TypeDef mik32fat_find_next_cluster(MIK32FAT_Descriptor_TypeDef* fs)
+MIK32FAT_Status_TypeDef mik32fat_find_next_cluster
+(
+    MIK32FAT_Descriptor_TypeDef *fs
+)
 {
     if (fs == NULL)
     {
@@ -157,7 +176,11 @@ MIK32FAT_Status_TypeDef mik32fat_find_next_cluster(MIK32FAT_Descriptor_TypeDef* 
  * @return cluster - the 1st cluster of file/dir. dir_sector - the number of sector of directory.
  * len - length of file. entire_in_dir_clust - number of entire in dir_sector. status - status of file/dir
  */
-MIK32FAT_Status_TypeDef mik32fat_find_by_name(MIK32FAT_Descriptor_TypeDef *fs, const char *name)
+MIK32FAT_Status_TypeDef mik32fat_find_by_name
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    const char *name
+)
 {
     if (fs == NULL || name == NULL)
     {
@@ -321,7 +344,11 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_name(MIK32FAT_Descriptor_TypeDef *fs, c
  * @return cluster - the 1st cluster of file/dir. dir_sector - the number of sector of directory.
  * len - length of file. entire_in_dir_clust - number of entire in dir_sector. status - status of file/dir
  */
-MIK32FAT_Status_TypeDef mik32fat_find_by_path(MIK32FAT_Descriptor_TypeDef *fs, const char *path)
+MIK32FAT_Status_TypeDef mik32fat_find_by_path
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    const char *path
+)
 {
     if (fs == NULL || path == NULL)
     {
@@ -374,7 +401,12 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_path(MIK32FAT_Descriptor_TypeDef *fs, c
  * @return cluster - the 1st cluster of file/dir. dir_sector - the number of sector of directory.
  * len - length of file. entire_in_dir_clust - number of entire in dir_sector. status - status of file/dir
  */
-MIK32FAT_Status_TypeDef mik32fat_find_or_create_by_path(MIK32FAT_Descriptor_TypeDef *fs, const char *path, bool dir)
+MIK32FAT_Status_TypeDef mik32fat_find_or_create_by_path
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    const char *path,
+    bool dir
+)
 {
     if (fs == NULL || path == NULL)
     {
@@ -433,7 +465,11 @@ MIK32FAT_Status_TypeDef mik32fat_find_or_create_by_path(MIK32FAT_Descriptor_Type
  * - MIK32FAT_STATUS_DISK_ERROR error while reading occurs
  * - MIK32FAT_STATUS_NO_FREE_SPACE there are not free space on the partition
  */
-MIK32FAT_Status_TypeDef mik32fat_find_free_cluster(MIK32FAT_Descriptor_TypeDef *fs, uint32_t *new_cluster)
+MIK32FAT_Status_TypeDef mik32fat_find_free_cluster
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    uint32_t *new_cluster
+)
 {
     if (fs == NULL || new_cluster == NULL)
     {
@@ -716,7 +752,10 @@ MIK32FAT_Status_TypeDef mik32fat_create
 }
 
 
-MIK32FAT_Status_TypeDef mik32fat_delete_temp_object(MIK32FAT_Descriptor_TypeDef* fs)
+MIK32FAT_Status_TypeDef mik32fat_delete_temp_object
+(
+    MIK32FAT_Descriptor_TypeDef* fs
+)
 {
     /* Set the 0th byte of entire as 0xE5 */
     uint32_t dir_sector = __mik32fat_get_sector(fs, fs->temp.dir_cluster, fs->temp.dir_sec_offset);
@@ -776,7 +815,11 @@ MIK32FAT_Status_TypeDef mik32fat_delete_temp_object(MIK32FAT_Descriptor_TypeDef*
  * name cannot contain more than 8 meaning symbols
  * @returns
  */
-MIK32FAT_Status_TypeDef mik32fat_delete(MIK32FAT_Descriptor_TypeDef* fs, const char* path)
+MIK32FAT_Status_TypeDef mik32fat_delete
+(
+    MIK32FAT_Descriptor_TypeDef *fs,
+    const char *path
+)
 {
     MIK32FAT_TempData_TypeDef temp = fs->temp;
     __DISK_ERROR_CHECK( mik32fat_find_by_path(fs, path) );
