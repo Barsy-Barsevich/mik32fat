@@ -1,4 +1,9 @@
-# SDxMIK32
+# MIK32FAT
+*FAT32-compatible file system for embedded platforms*
+
+\[RU/EN]
+
+---
 Это репозиторий драйвера SD-карт и файловой системы MIK32FAT, совместимой с файловой системой FAT32.
 Репозиторий построен как проект PlatformIO IDE для микроконтроллера MIK32, framework - framework-mik32v2-sdk. Файл main.c содержит пример записи и чтения файлов. Файлы mik32fat.h и mik32fat.c относятся к файловой системе. Файлы sd.h и sd.c - это драйвер диска.
 
