@@ -204,14 +204,6 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_name
         }
     }
 
-    // printf("Name: *");
-    // int u = 0;
-    // while (name[u] != '\0' && name[u] != '/')
-    // {
-    //     putchar(name[u++]);
-    // }
-    // printf("*\n");
-
     char name_str[11];
     /* Preparing the name string */
     size_t i = 0;
