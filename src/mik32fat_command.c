@@ -34,7 +34,13 @@ void mik32fat_command_cdroot(MIK32FAT_Descriptor_TypeDef *fs)
 
 void mik32fat_command_cd(MIK32FAT_Descriptor_TypeDef *fs, const char *path)
 {
+    MIK32FAT_TempData_TypeDef temp = fs->temp;
     mik32fat_decode_status(mik32fat_find_by_path(fs, path));
+    if ((fs->temp.status & MIK32FAT_ATTR_DIRECTORY) == 0)
+    {
+        fs->temp = temp;
+        printf("Cannot enter, %s is a file, stop.\n", path);
+    }
 }
 
 void mik32fat_command_mkdir(MIK32FAT_Descriptor_TypeDef *fs, const char *path)
