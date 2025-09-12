@@ -348,8 +348,15 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_path
     }
 
     /* calculate number of '/' symbols */
+    bool absilute_path = false;
     uint8_t descend_number = 1;
     uint8_t i = 0;
+    if (path[0] == '/')
+    {
+        i = 1;
+        absilute_path = true;
+        mik32fat_set_pointer_to_root(fs);
+    }
     while (path[i] != '\0')
     {
         if (path[i] == '/') descend_number += 1;
@@ -358,7 +365,7 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_path
     /* Descend into directories and files */
     MIK32FAT_TempData_TypeDef temp = fs->temp;
     MIK32FAT_Status_TypeDef res;
-    size_t j = 0;
+    size_t j = absilute_path ? 1 : 0;
     for (uint8_t k=0; k<descend_number; k++)
     {
         res = mik32fat_find_by_name(fs, path+j);
@@ -407,8 +414,15 @@ MIK32FAT_Status_TypeDef mik32fat_find_or_create_by_path
 
     /* Adopted FAT_FBP. If dir/file not found, create it */
     /* calculate number of '/' symbols */
+    bool absolute_path = false;
     uint8_t descend_number = 1;
     uint8_t i = 0;
+    if (path[0] == '/');
+    {
+        i = 1;
+        absolute_path = true;
+        mik32fat_set_pointer_to_root(fs);
+    }
     while (path[i] != '\0')
     {
         if (path[i] == '/') descend_number += 1;
@@ -419,7 +433,7 @@ MIK32FAT_Status_TypeDef mik32fat_find_or_create_by_path
     MIK32FAT_Status_TypeDef res;
     bool not_found = false;
     // char* ptr = path;
-    size_t j = 0;
+    size_t j = absolute_path ? 1 : 0;
     for (uint8_t k=0; k<descend_number; k++)
     {
         if (!not_found)
