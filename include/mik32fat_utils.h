@@ -8,6 +8,6 @@
 #include "mik32fat_param.h"
 #include "mik32fat_wheels.h"
 
-#include "mik32fat.h"
+#include "mik32fat_base.h"
 
 MIK32FAT_Status_TypeDef mik32fat_utils_ls(MIK32FAT_Descriptor_TypeDef *fs, FILE *output);
