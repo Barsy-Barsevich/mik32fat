@@ -368,18 +368,25 @@ MIK32FAT_Status_TypeDef mik32fat_find_by_path
     size_t j = absilute_path ? 1 : 0;
     for (uint8_t k=0; k<descend_number; k++)
     {
+        bool last_path_part = k == (descend_number-1);
         res = mik32fat_find_by_name(fs, path+j);
         if (res != MIK32FAT_STATUS_OK)
         {
             fs->temp = temp;
             return res;
         }
-        if (k == descend_number-1)
+        if (last_path_part)
         {
+            // save name
             strcpy(fs->temp.name, path+j);
         }
         else
         {
+            if ((fs->temp.status & MIK32FAT_ATTR_DIRECTORY) == 0)
+            {
+                fs->temp = temp;
+                return MIK32FAT_STATUS_FILE_IN_PATH_ERROR;
+            }
             /* Find next name in path */
             while (path[j++] != '/');
         }

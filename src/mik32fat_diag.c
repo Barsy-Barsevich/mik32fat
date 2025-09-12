@@ -84,6 +84,9 @@ void mik32fat_decode_status(MIK32FAT_Status_TypeDef status)
         case MIK32FAT_STATUS_END_OF_FILE:
             printf("End of file");
             break;
+        case MIK32FAT_STATUS_FILE_IN_PATH_ERROR:
+            printf("Cannot enter file as directory, path error");
+            break;
         default:
             printf("Unexpected error (%d)", (int)status);
     }
@@ -103,7 +106,7 @@ MIK32FAT_Status_TypeDef mik32fat_diag_sector_list
     
     do {
         int sd_res = (int)mik32_sd_single_read(f->card, sector, f->buffer);
-        if (res != 0)
+        if (sd_res != 0)
         {
             return MIK32FAT_STATUS_DISK_ERROR;
         }
@@ -139,20 +142,20 @@ MIK32FAT_Status_TypeDef mik32fat_diag_sector_list
             uint8_t i=0;
             while ((entire->Name[i] != 0x20) && (i < 8))
             {
-                xputc(entire->Name[i]);
+                putchar(entire->Name[i]);
                 i += 1;
             }
             if (entire->Extention[0] != 0x20)
             {
-                xputc('.');
+                putchar('.');
                 i = 0;
                 while ((entire->Extention[i] != 0x20) && (i < 3))
                 {
-                    xputc(entire->Extention[i]);
+                    putchar(entire->Extention[i]);
                     i += 1;
                 }
             }
-            xputc('\n');
+            putchar('\n');
 
             entire += 1;
             entire_counter += 32;
