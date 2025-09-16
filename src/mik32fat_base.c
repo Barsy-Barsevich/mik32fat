@@ -613,6 +613,20 @@ MIK32FAT_Status_TypeDef mik32fat_create
     {
         return MIK32FAT_STATUS_INCORRECT_ARGUMENT;
     }
+
+    //Check existing
+    MIK32FAT_TempData_TypeDef saved_temp = fs->temp;
+    MIK32FAT_Status_TypeDef search_res = mik32fat_find_by_name(fs, name);
+    fs->temp = saved_temp;
+    if (search_res != MIK32FAT_STATUS_NOT_FOUND)
+    {
+        if (search_res == MIK32FAT_STATUS_OK)
+        {
+            search_res = MIK32FAT_STATUS_ALREADY_EXISTS;
+        }
+        return search_res;
+    }
+
     char name_str[11];
     /* Preparing the name string */
     size_t i = 0;

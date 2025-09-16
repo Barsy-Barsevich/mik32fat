@@ -87,6 +87,9 @@ void mik32fat_decode_status(MIK32FAT_Status_TypeDef status)
         case MIK32FAT_STATUS_FILE_IN_PATH_ERROR:
             printf("Cannot enter file as directory, path error");
             break;
+        case MIK32FAT_STATUS_ALREADY_EXISTS:
+            printf("Object with this name already exists");
+            break;
         default:
             printf("Unexpected error (%d)", (int)status);
     }
